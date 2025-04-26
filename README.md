@@ -26,7 +26,7 @@ LangDB is an educational SQL database implementation written in Rust. It provide
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/username/langdb.git
+   git clone https://github.com/Okemwag/langdb.git
    cd langdb
    ```
 
