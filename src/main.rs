@@ -33,7 +33,7 @@ fn process_special_command(cmd: &str, executor: &QueryExecutor) -> Result<bool> 
     match cmd.trim().to_lowercase().as_str() {
         ".exit" | ".quit" => {
             println!("Exiting LangDB. Goodbye!");
-            return Ok(true); // true signals exit
+            return Ok(true);
         }
         ".help" => {
             print_welcome();
@@ -58,7 +58,7 @@ fn process_special_command(cmd: &str, executor: &QueryExecutor) -> Result<bool> 
             println!("Type .help for usage information");
         }
     }
-    Ok(false) // false means continue
+    Ok(false)
 }
 
 /// Create a schema from string column definitions

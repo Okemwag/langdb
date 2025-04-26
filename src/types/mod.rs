@@ -29,7 +29,7 @@ pub enum DataType {
     Integer,
     /// UTF-8 string
     Text,
-    // Can be extended with more types later (e.g., FLOAT, BOOLEAN, DATE, etc.)
+    //TODO: Extend with more types later (e.g., FLOAT, BOOLEAN, DATE, etc.)
 }
 
 impl Display for DataType {
