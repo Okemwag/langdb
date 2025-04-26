@@ -33,7 +33,7 @@ fn process_special_command(cmd: &str, executor: &QueryExecutor) -> Result<bool> 
     match cmd.trim().to_lowercase().as_str() {
         ".exit" | ".quit" => {
             println!("Exiting LangDB. Goodbye!");
-            return Ok(true); // Signal to exit the REPL
+            return Ok(true); // true signals exit
         }
         ".help" => {
             print_welcome();
@@ -58,7 +58,7 @@ fn process_special_command(cmd: &str, executor: &QueryExecutor) -> Result<bool> 
             println!("Type .help for usage information");
         }
     }
-    Ok(false) // Continue the REPL
+    Ok(false) // false means continue
 }
 
 /// Create a schema from string column definitions
@@ -75,13 +75,10 @@ fn create_schema_from_strs(column_defs: Vec<&str>) -> Result<Schema> {
         let data_type = match parts[1].to_uppercase().as_str() {
             "INTEGER" => DataType::Integer,
             "TEXT" => DataType::Text,
-            // Add more data types as needed
             _ => return Err(anyhow::anyhow!("Unsupported data type: {}", parts[1])),
         };
 
-        // Check if column is nullable (default to false)
         let nullable = parts.len() > 2 && parts[2].to_uppercase() == "NULL";
-
         columns.push(Column::new(name, data_type, nullable));
     }
 
@@ -90,7 +87,6 @@ fn create_schema_from_strs(column_defs: Vec<&str>) -> Result<Schema> {
 
 /// Run the REPL (Read-Eval-Print Loop)
 fn run_repl() -> Result<()> {
-    // Initialize storage
     let storage = Database::new();
 
     // Create initial tables if they don't exist
@@ -116,22 +112,14 @@ fn run_repl() -> Result<()> {
             .context("Failed to create orders table")?;
     }
 
-    // Initialize the query executor
     let executor = QueryExecutor::new(storage);
-
-    // Print welcome message
     print_welcome();
 
-    // Input buffer for multi-line commands
     let mut input_buffer = String::new();
-
-    // Set up stdin
     let stdin = io::stdin();
     let mut handle = stdin.lock();
 
-    // REPL loop
     loop {
-        // Print prompt if the input buffer is empty
         if input_buffer.is_empty() {
             print!("langdb> ");
             io::stdout().flush()?;
@@ -140,20 +128,16 @@ fn run_repl() -> Result<()> {
             io::stdout().flush()?;
         }
 
-        // Read a line of input
         let mut line = String::new();
         handle.read_line(&mut line)?;
 
-        // Check for EOF
         if line.is_empty() {
             println!("Exiting due to EOF. Goodbye!");
             break;
         }
 
-        // Trim the line
         let line = line.trim();
 
-        // Check for special commands
         if line.starts_with(".") {
             if process_special_command(line, &executor)? {
                 break;
@@ -161,26 +145,22 @@ fn run_repl() -> Result<()> {
             continue;
         }
 
-        // Add the line to the input buffer
         input_buffer.push_str(line);
         input_buffer.push(' ');
 
-        // Check if the command is complete (ends with semicolon)
         if !line.ends_with(';') {
             continue;
         }
 
-        // Remove the trailing semicolon
+        // Remove trailing semicolon
         input_buffer.pop(); // Remove the space
         input_buffer.pop(); // Remove the semicolon
 
-        // Process the SQL command
         match process_sql_command(&input_buffer, &executor) {
             Ok(_) => {}
             Err(e) => println!("Error: {}", e),
         }
 
-        // Clear the input buffer
         input_buffer.clear();
     }
 
@@ -189,7 +169,6 @@ fn run_repl() -> Result<()> {
 
 /// Process a SQL command
 fn process_sql_command(sql: &str, executor: &QueryExecutor) -> Result<()> {
-    // Parse the SQL statement
     let statement = match parse_sql(sql) {
         Ok(stmt) => stmt,
         Err(e) => {
@@ -197,12 +176,9 @@ fn process_sql_command(sql: &str, executor: &QueryExecutor) -> Result<()> {
         }
     };
 
-    // Execute the statement
     match executor.execute(statement) {
         Ok(result) => {
-            // Display the result
             if !result.is_empty() {
-                // Print the result as a table
                 println!("{}", result.to_string());
             }
             Ok(())

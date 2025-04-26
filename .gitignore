@@ -1,1 +1,60 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Since this is a library, don't check in Cargo.lock
+Cargo.lock
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.vim/
+*.sublime-*
+.atom/
+.project
+.settings/
+.classpath
+
+# Operating system specific files
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Debug files
+*.log
+*.log.*
+*.stackdump
+
+# Crashdump files
+*.dmp
+
+# Profile files
+flamegraph.svg
+perf.data
+perf.data.old
+
+# Documentation generated artifacts
+/doc/
+/target/doc/
+
 /target
