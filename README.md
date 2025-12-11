@@ -40,6 +40,13 @@ LangDB is an educational SQL database implementation written in Rust. It provide
    cargo run --release
    ```
 
+4. (Optional) Run the test script:
+   ```bash
+   ./test_run.sh
+   ```
+
+For a detailed getting started guide, see [QUICKSTART.md](QUICKSTART.md).
+
 ## Usage
 
 LangDB provides an interactive SQL prompt where you can enter SQL commands:
@@ -120,6 +127,190 @@ SELECT name, age FROM users WHERE age > 25;
 - No persistent storage (in-memory only)
 - Limited data types (INTEGER and TEXT only)
 - Basic WHERE clause (no AND/OR support)
+
+## System Design
+
+LangDB follows a layered architecture pattern, separating concerns into distinct modules that work together to provide a complete SQL database system.
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    REPL Interface                        │
+│                     (main.rs)                            │
+│  - User input handling                                   │
+│  - Command routing                                       │
+│  - Result formatting                                     │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                   SQL Parser                             │
+│                  (parser/mod.rs)                         │
+│  - Lexical analysis                                      │
+│  - Syntax parsing (nom combinators)                     │
+│  - AST generation                                        │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                 Query Executor                           │
+│                (executor/mod.rs)                         │
+│  - Statement routing                                     │
+│  - Query planning                                        │
+│  - WHERE clause evaluation                               │
+│  - Column projection                                     │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                 Storage Engine                           │
+│                (storage/mod.rs)                          │
+│  - Table management                                      │
+│  - Row storage (in-memory)                              │
+│  - Thread-safe operations (RwLock)                      │
+│  - Schema validation                                     │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                   Type System                            │
+│                  (types/mod.rs)                          │
+│  - Data type definitions                                 │
+│  - Value representation                                  │
+│  - Schema structures                                     │
+│  - Type validation & conversion                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Module Breakdown
+
+#### 1. REPL Interface (`main.rs`)
+The entry point and user interaction layer:
+- Implements a Read-Eval-Print Loop for interactive SQL execution
+- Handles special commands (`.help`, `.exit`, `.tables`)
+- Manages multi-line SQL input (statements ending with `;`)
+- Formats and displays query results
+- Provides error handling and user feedback
+
+#### 2. SQL Parser (`parser/mod.rs`)
+Transforms SQL text into executable statements:
+- Built using the `nom` parser combinator library
+- Supports three statement types:
+  - `CREATE TABLE`: Table definition with columns and types
+  - `INSERT`: Data insertion with optional column specification
+  - `SELECT`: Data retrieval with column projection and filtering
+- Generates Abstract Syntax Tree (AST) representations
+- Provides detailed error messages for syntax errors
+
+Key parsing components:
+- Identifier parsing (table/column names)
+- Literal parsing (strings, integers, NULL)
+- Operator parsing (=, <>, >, <, >=, <=)
+- Clause parsing (WHERE conditions)
+
+#### 3. Query Executor (`executor/mod.rs`)
+Executes parsed SQL statements:
+- Routes statements to appropriate execution handlers
+- Implements query logic:
+  - **CREATE TABLE**: Validates schema and creates table structure
+  - **INSERT**: Validates data types and inserts rows
+  - **SELECT**: Performs table scans, applies filters, and projects columns
+- Handles WHERE clause evaluation
+- Manages column projection (selecting specific columns or `*`)
+- Converts execution results into `ResultSet` objects
+
+Execution flow:
+1. Receive parsed statement from parser
+2. Validate against storage schema
+3. Execute operation on storage layer
+4. Format results for display
+
+#### 4. Storage Engine (`storage/mod.rs`)
+Manages data persistence and retrieval:
+- In-memory storage using `HashMap<String, Table>`
+- Thread-safe operations via `Arc<RwLock<>>`
+- Table structure:
+  - Metadata (name, schema)
+  - Row collection (Vec<Row>)
+- Operations:
+  - Table creation/deletion
+  - Row insertion (single and batch)
+  - Table scanning
+  - Row filtering
+- Schema validation on all write operations
+
+Concurrency model:
+- Read-write locks allow multiple concurrent readers
+- Exclusive write access for modifications
+- Prevents data races and ensures consistency
+
+#### 5. Type System (`types/mod.rs`)
+Defines core data structures:
+- **DataType**: Supported SQL types (INTEGER, TEXT)
+- **Value**: Runtime value representation (Integer, Text, Null)
+- **Column**: Column definition with name, type, and nullability
+- **Schema**: Collection of columns defining table structure
+- **Row**: Collection of values representing a table row
+- **ResultSet**: Query results with schema and rows
+
+Type operations:
+- Type validation and conversion
+- Value comparison (for WHERE clauses)
+- Schema validation
+- Result formatting
+
+### Data Flow
+
+#### Query Execution Flow
+```
+User Input → Parser → Executor → Storage → Result
+     ↓          ↓         ↓          ↓         ↓
+  "SELECT"   Statement  Execute   Scan     Format
+   SQL text    AST      Query     Table    Display
+```
+
+#### Example: SELECT Query
+1. User enters: `SELECT name FROM users WHERE id = 1;`
+2. Parser creates `SelectStatement` with:
+   - columns: `["name"]`
+   - table_name: `"users"`
+   - where_clause: `Condition { column: "id", op: Equals, value: Integer(1) }`
+3. Executor:
+   - Retrieves table schema from storage
+   - Scans all rows from `users` table
+   - Filters rows where `id = 1`
+   - Projects only `name` column
+4. Storage returns matching rows
+5. Executor creates `ResultSet` with filtered/projected data
+6. REPL formats and displays results
+
+### Design Patterns
+
+1. **Layered Architecture**: Clear separation of concerns across modules
+2. **Parser Combinator**: Composable parsing functions using `nom`
+3. **Repository Pattern**: Storage layer abstracts data access
+4. **Visitor Pattern**: Executor visits different statement types
+5. **Builder Pattern**: Schema and row construction
+6. **Thread-Safe Singleton**: Database instance with Arc<RwLock<>>
+
+### Concurrency & Thread Safety
+
+LangDB uses Rust's ownership system and synchronization primitives:
+- `Arc<RwLock<HashMap>>` for shared database access
+- Multiple readers can access data simultaneously
+- Writers get exclusive access
+- Prevents data races at compile time
+
+### Error Handling
+
+Comprehensive error types for each layer:
+- `ParseError`: Syntax and parsing errors
+- `ExecutionError`: Query execution failures
+- `StorageError`: Data access and validation errors
+- `TypeError`: Type conversion and validation errors
+
+All errors implement `thiserror::Error` for consistent error handling.
 
 ## Code Structure
 
