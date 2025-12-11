@@ -132,6 +132,8 @@ SELECT name, age FROM users WHERE age > 25;
 
 LangDB follows a layered architecture pattern, separating concerns into distinct modules that work together to provide a complete SQL database system.
 
+> For a detailed architecture overview, see [ARCHITECTURE.md](ARCHITECTURE.md)
+
 ### Architecture Overview
 
 ```
@@ -425,6 +427,15 @@ Contributions are welcome! Here's how you can contribute to LangDB:
 5. Submit a pull request
 
 Please make sure your code follows the existing style and includes appropriate tests.
+
+## Project Journey
+
+Want to understand the thought process, challenges, and learnings behind this project? Read the detailed journey:
+- [PROJECT_JOURNEY.md](PROJECT_JOURNEY.md) - A deep dive into why and how this database was built
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and version information.
 
 ## License
 
