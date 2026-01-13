@@ -1,0 +1,108 @@
+{
+  "users": {
+    "metadata": {
+      "name": "users",
+      "schema": {
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "Integer",
+            "nullable": false
+          },
+          {
+            "name": "name",
+            "data_type": "Text",
+            "nullable": false
+          }
+        ]
+      }
+    },
+    "rows": []
+  },
+  "demo": {
+    "metadata": {
+      "name": "demo",
+      "schema": {
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "Integer",
+            "nullable": false
+          },
+          {
+            "name": "name",
+            "data_type": "Text",
+            "nullable": false
+          }
+        ]
+      }
+    },
+    "rows": [
+      {
+        "values": [
+          {
+            "Integer": 1
+          },
+          {
+            "Text": "Hello World"
+          }
+        ]
+      },
+      {
+        "values": [
+          {
+            "Integer": 2
+          },
+          {
+            "Text": "LangDB Demo"
+          }
+        ]
+      }
+    ]
+  },
+  "products": {
+    "metadata": {
+      "name": "products",
+      "schema": {
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "Integer",
+            "nullable": false
+          },
+          {
+            "name": "name",
+            "data_type": "Text",
+            "nullable": false
+          }
+        ]
+      }
+    },
+    "rows": []
+  },
+  "orders": {
+    "metadata": {
+      "name": "orders",
+      "schema": {
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "Integer",
+            "nullable": false
+          },
+          {
+            "name": "user_id",
+            "data_type": "Integer",
+            "nullable": false
+          },
+          {
+            "name": "product_id",
+            "data_type": "Integer",
+            "nullable": false
+          }
+        ]
+      }
+    },
+    "rows": []
+  }
+}
